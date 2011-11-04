@@ -3690,14 +3690,20 @@ end
 % =========================================================================
 function [ ticks, tickLabels ] = getTicks( m2t, handle )
 
-  % The tick labels are neve LaTeX interpreted. (Really?)
-  labelInterpreter = 'none';
+  % The tick labels are never LaTeX interpreted. (Really?)
+  % MATLAB(R) Help says:
+  % Note that tick labels do not interpret TeX character sequences (however, the Title, XLabel, YLabel, and ZLabel properties do).
+  % but why not?
+  labelInterpreter = 'tex';
 
-  xTickLabel = get( handle, 'XTickLabel' );
-  for k = 1:length(xTickLabel)
-      xTickLabel(k) = prettyPrint( m2t, xTickLabel(k), labelInterpreter);
-  end
-  xTickMode = get( handle, 'XTickMode' );
+	xTickLabel = get( handle, 'XTickLabel' );
+	if ~iscellstr(xTickLabel)
+		xTickLabel = cellstr(xTickLabel);
+	end
+	for k = 1:length(xTickLabel)
+		xTickLabel{k} = prettyPrint( m2t, xTickLabel(k), labelInterpreter);
+	end
+	xTickMode = get( handle, 'XTickMode' );
   if strcmp(xTickMode,'auto') && ~m2t.cmdOpts.Results.strict
       % If the ticks are set automatically, and strict conversion is
       % not required, then let pgfplots take care of the ticks.
@@ -3715,9 +3721,12 @@ function [ ticks, tickLabels ] = getTicks( m2t, handle )
   end
 
   yTickLabel = get( handle, 'YTickLabel' );
-  for k = 1:length(yTickLabel)
-      yTickLabel(k) = prettyPrint( m2t, yTickLabel(k), labelInterpreter);
-  end
+	if ~iscellstr(yTickLabel)
+		yTickLabel = cellstr(yTickLabel);
+	end
+	for k = 1:length(yTickLabel)
+		yTickLabel{k} = prettyPrint( m2t, yTickLabel(k), labelInterpreter);
+	end
   yTickMode = get( handle, 'YTickMode' );
   if strcmp(yTickMode,'auto') && ~m2t.cmdOpts.Results.strict
       % If the ticks are set automatically, and strict conversion is
@@ -3736,9 +3745,12 @@ function [ ticks, tickLabels ] = getTicks( m2t, handle )
   end
 
   zTickLabel = get( handle, 'ZTickLabel' );
-  for k = 1:length(zTickLabel)
-      zTickLabel(k) = prettyPrint( m2t, zTickLabel(k), labelInterpreter);
-  end
+	if ~iscellstr(zTickLabel)
+		xTickLabel = cellstr(zTickLabel);
+	end
+	for k = 1:length(zTickLabel)
+		zTickLabel{k} = prettyPrint( m2t, zTickLabel(k), labelInterpreter);
+	end
   zTickMode = get( handle, 'ZTickMode' );
   if strcmp(yTickMode,'auto') && ~m2t.cmdOpts.Results.strict
       % If the ticks are set automatically, and strict conversion is
