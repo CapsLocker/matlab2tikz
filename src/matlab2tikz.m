@@ -31,7 +31,7 @@
 % ***
 % =========================================================================
 % ***
-% *** Copyright (c) 2008--2011, Nico SchlÃ¶mer <nico.schloemer@gmail.com>
+% *** Copyright (c) 2008--2011, Nico Schlömer <nico.schloemer@gmail.com>
 % *** All rights reserved.
 % ***
 % *** Redistribution and use in source and binary forms, with or without
@@ -93,7 +93,7 @@ function matlab2tikz( varargin )
 
   m2t.name = 'matlab2tikz';
   m2t.version = '0.1.3';
-  m2t.author = 'Nico SchlÃ¶mer';
+  m2t.author = 'Nico Schlömer';
   m2t.authorEmail = 'nico.schloemer@gmail.com';
   m2t.years = '2008--2011';
   m2t.website = 'http://www.mathworks.com/matlabcentral/fileexchange/22022-matlab2tikz';
@@ -164,6 +164,7 @@ function matlab2tikz( varargin )
 
   % extra axis options
   m2t.cmdOpts = m2t.cmdOpts.addParamValue( m2t.cmdOpts, 'extraAxisOptions', {}, @isCellOrChar );
+  m2t.cmdOpts = m2t.cmdOpts.addParamValue( m2t.cmdOpts, 'interpretTickLabelsAsTex', false, @islogical );
 
   % file encoding
   m2t.cmdOpts = m2t.cmdOpts.addParamValue( m2t.cmdOpts, 'encoding' , '', @ischar );
@@ -3691,19 +3692,20 @@ end
 function [ ticks, tickLabels ] = getTicks( m2t, handle )
 
   % The tick labels are never LaTeX interpreted. (Really?)
-  % MATLAB(R) Help says:
-  % Note that tick labels do not interpret TeX character sequences (however, the Title, XLabel, YLabel, and ZLabel properties do).
-  % but why not?
-  labelInterpreter = 'tex';
-
-	xTickLabel = get( handle, 'XTickLabel' );
-	if ~iscellstr(xTickLabel)
-		xTickLabel = cellstr(xTickLabel);
-	end
-	for k = 1:length(xTickLabel)
-		xTickLabel{k} = prettyPrint( m2t, xTickLabel(k), labelInterpreter);
-	end
-	xTickMode = get( handle, 'XTickMode' );
+  if m2t.cmdOpts.Results.interpretTickLabelsAsTex
+      labelInterpreter = 'tex';
+  else
+      labelInterpreter = 'none';
+  end
+  
+  xTickLabel = get( handle, 'XTickLabel' );
+  if strcmp(labelInterpreter,'tex') && ~iscell(xTickLabel)
+      xTickLabel = cellstr(xTickLabel);
+  end
+  for k = 1:length(xTickLabel)
+      xTickLabel(k) = prettyPrint( m2t, xTickLabel(k), labelInterpreter);
+  end
+  xTickMode = get( handle, 'XTickMode' );
   if strcmp(xTickMode,'auto') && ~m2t.cmdOpts.Results.strict
       % If the ticks are set automatically, and strict conversion is
       % not required, then let pgfplots take care of the ticks.
@@ -3721,12 +3723,12 @@ function [ ticks, tickLabels ] = getTicks( m2t, handle )
   end
 
   yTickLabel = get( handle, 'YTickLabel' );
-	if ~iscellstr(yTickLabel)
-		yTickLabel = cellstr(yTickLabel);
-	end
-	for k = 1:length(yTickLabel)
-		yTickLabel{k} = prettyPrint( m2t, yTickLabel(k), labelInterpreter);
-	end
+  if strcmp(labelInterpreter,'tex') && ~iscell(yTickLabel)
+      yTickLabel = cellstr(yTickLabel);
+  end
+  for k = 1:length(yTickLabel)
+    yTickLabel(k) = prettyPrint( m2t, yTickLabel(k), labelInterpreter);
+  end
   yTickMode = get( handle, 'YTickMode' );
   if strcmp(yTickMode,'auto') && ~m2t.cmdOpts.Results.strict
       % If the ticks are set automatically, and strict conversion is
@@ -3745,12 +3747,12 @@ function [ ticks, tickLabels ] = getTicks( m2t, handle )
   end
 
   zTickLabel = get( handle, 'ZTickLabel' );
-	if ~iscellstr(zTickLabel)
-		xTickLabel = cellstr(zTickLabel);
-	end
-	for k = 1:length(zTickLabel)
-		zTickLabel{k} = prettyPrint( m2t, zTickLabel(k), labelInterpreter);
-	end
+  if strcmp(labelInterpreter,'tex') && ~iscell(zTickLabel)
+      zTickLabel = cellstr(zTickLabel);
+  end
+  for k = 1:length(zTickLabel)
+      zTickLabel(k) = prettyPrint( m2t, zTickLabel(k), labelInterpreter);
+  end
   zTickMode = get( handle, 'ZTickMode' );
   if strcmp(yTickMode,'auto') && ~m2t.cmdOpts.Results.strict
       % If the ticks are set automatically, and strict conversion is
@@ -4543,7 +4545,7 @@ end
 % *** the graph starting from a node (AXES) with maximal connections.
 % ***
 % *** TODO:
-% ***     - diagonal connections Ã  la
+% ***     - diagonal connections à la
 % ***              [ AXES1       ]
 % ***              [       AXES2 ]
 % ***
@@ -5337,6 +5339,11 @@ function string = prettyPrint( m2t, string, interpreter )
       userWarning( m2t, 'Don''t know interpreter ''%s''. Default handling.', interpreter );
       interpreter = 'tex';
   end
+  if iscell(string)
+      stringWasCell=1;
+  else
+      stringWasCell=0;
+  end
 
   % The interpreter property of the text element defines how the string
   % is parsed
@@ -5364,6 +5371,9 @@ function string = prettyPrint( m2t, string, interpreter )
 
   end
 
+  if stringWasCell
+      string={string};
+  end
 end
 % =========================================================================
 % *** END FUNCTION prettyPrint
